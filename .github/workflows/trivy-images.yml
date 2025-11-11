@@ -38,7 +38,6 @@ jobs:
           tmp=$(mktemp)
           
           # CRITICAL FIX 1: Use process substitution (< <(...)) to avoid subshell issues 
-          # so the 'results' variable retains its value outside the loop.
           while read -r img; do
             I=$(echo "$img" | tr -d '"')
             echo "Scanning $I..."
@@ -66,34 +65,23 @@ jobs:
             results=$(jq --slurpfile r "$tmp.out" '.results += $r' <<< "$results")
           done < <(echo "$IMAGES" | jq -c '.[]')
           
-          # 💡 DEBUG: Print the final payload to the action log for verification
+          # Save the final JSON to a file
+          echo "$results" > final_payload.json
+
+          # DEBUG: Print the final payload to the action log for verification
           echo "--- START: Final Aggregated JSON Payload ---"
           echo "$results"
           echo "--- END: Final Aggregated JSON Payload ---"
 
-          # Save the final JSON to an easily readable artifact for the next step
-          echo "$results" > final_payload.json
-
-      - name: Set Payload Output (Easy Method)
-        id: set_output
-        uses: actions/github-script@v7
-        with:
-          # This action reads the file and correctly sets the multi-line JSON as output.
-          script: |
-            const fs = require('fs');
-            const payload = fs.readFileSync('final_payload.json', 'utf8');
-            core.setOutput('payload', payload);
-
       - name: POST results to n8n Webhook
+        # Removed the PAYLOAD environment variable as it's no longer needed
         env:
           CB: ${{ github.event.inputs.callback }}
           TOK: ${{ github.event.inputs.token }}
-          # Reference the output from the new step (id: set_output)
-          PAYLOAD: ${{ steps.set_output.outputs.payload }}
         run: |
           hdr=(-H 'Content-Type: application/json')
           if [ -n "$TOK" ]; then
             hdr+=(-H "X-Scanner-Token: $TOK")
           fi
-          # Use --data-raw for robust JSON transfer
-          curl -sS -X POST "${hdr[@]}" --data-raw "$PAYLOAD" "$CB"
+          # FINAL FIX: Read the payload directly from the file to bypass size limits
+          curl -sS -X POST "${hdr[@]}" --data-binary @final_payload.json "$CB"
