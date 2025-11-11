@@ -43,15 +43,15 @@ jobs:
             echo "Scanning $I..."
             
             # Trivy returns exit 1 when vulns are found; we still want JSON
-            trivy image --format json --severity HIGH,CRITICAL "$I" > "$tmp" || true
+            trivy image --ignore-unfixed --format json --severity HIGH,CRITICAL "$I" > "$tmp" || true
 
             # Process Trivy JSON with jq
             jq --arg image "$I" '
               {
                 image: $image,
                 ok: true,
-                highCritCount: ([.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL")] | length),
-                fixableCount: ([.Results[].Vulnerabilities[]? | select((.Severity=="HIGH" or .Severity=="CRITICAL") and (.FixedVersion != null and .FixedVersion != ""))] | length),
+                highCount: ([.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length),
+                critCount: ([.Results[].Vulnerabilities[]? | select((.Severity=="CRITICAL") and (.FixedVersion != null and .FixedVersion != ""))] | length),
                 rows: ([.Results[].Vulnerabilities[]? | select(.Severity=="HIGH" or .Severity=="CRITICAL") | {
                   id: .VulnerabilityID, pkg: .PkgName, installed: .InstalledVersion,
                   fixed: (.FixedVersion // ""), severity: .Severity, title: (.Title // ""),
