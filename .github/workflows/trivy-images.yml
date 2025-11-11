@@ -3,19 +3,19 @@ on:
   workflow_dispatch:
     inputs:
       images:
-        description: '["ubuntu:22.04","alpine:3.20"]'
+        description: 'JSON array of images'
         required: true
         type: string
       callback:
-        description: 'https://example.com/callback'
+        description: 'n8n webhook URL (will receive scan results)'
         required: true
         type: string
       token:
-        description: 'SHARED-SECRET-123'
+        description: 'shared secret (echoed as X-Scanner-Token)'
         required: false
         type: string
       corr:
-        description: 'sample parameter'
+        description: 'correlation id (optional)'
         required: false
         type: string
 
