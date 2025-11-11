@@ -24,13 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Trivy
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg jq curl
-          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg >/dev/null
-          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb stable main" | sudo tee /etc/apt/sources.list.d/trivy.list
-          sudo apt-get update && sudo apt-get install -y trivy
+        uses: aquasecurity/setup-trivy@v0.2.3
 
       # ===== OPTIONAL: login to private registries (uncomment the one you need) =====
       # - name: Docker login (Nexus / generic registry)
