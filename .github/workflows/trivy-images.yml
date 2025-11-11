@@ -89,11 +89,10 @@ jobs:
           CB: ${{ github.event.inputs.callback }}
           TOK: ${{ github.event.inputs.token }}
           PAYLOAD: ${{ steps.scan.outputs.payload }}
-        run: |
-          echo "$PAYLOAD"
-      #    hdr=(-H 'Content-Type: application/json')
-      #    if [ -n "$TOK" ]; then
-      #      hdr+=(-H "X-Scanner-Token: $TOK")
-      #    fi
-      #    curl -sS -X POST "${hdr[@]}" -d "$PAYLOAD" "$CB"
+        run: |          
+          hdr=(-H 'Content-Type: application/json')
+          if [ -n "$TOK" ]; then
+            hdr+=(-H "X-Scanner-Token: $TOK")
+          fi
+          curl -sS -X POST "${hdr[@]}" -d "$PAYLOAD" "$CB"
            
